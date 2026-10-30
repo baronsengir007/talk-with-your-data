@@ -1,0 +1,87 @@
+cases:
+- id: orders_in_2018
+  kind: simple
+  turns:
+    - message: "How many orders did we receive in 2018?"
+  expected: answer
+  golden_sql: |
+    SELECT count(*) AS order_count
+    FROM clean.orders
+    WHERE purchase_ts >= TIMESTAMP '2018-01-01'
+      AND purchase_ts < TIMESTAMP '2019-01-01';
+  meaning: "Approximately 54,000 orders were purchased in 2018, including the sparse final months in the dataset."
+  quote_population: null
+  approved_by_rienk: true
+- id: distinct_customers
+  kind: simple
+  turns:
+    - message: "How many distinct customers bought from us in the dataset?"
+  expected: answer
+  golden_sql: |
+    SELECT count(DISTINCT customer_unique_id) AS customer_count
+    FROM clean.orders;
+  meaning: "Approximately 96,096 distinct people placed an order across the dataset."
+  quote_population: null
+  approved_by_rienk: true
+- id: total_revenue
+  kind: trap
+  turns:
+    - message: "How much revenue did we make across the whole dataset?"
+  expected: answer
+  golden_sql: |
+    SELECT round(sum(order_payment_value), 2) AS revenue_brl
+    FROM clean.orders
+    WHERE status NOT IN ('canceled', 'unavailable');
+  meaning: "Approximately R$15.7 million was paid for orders other than canceled or unavailable orders, including items and freight."
+  quote_population: null
+  approved_by_rienk: true
+- id: late_reviews
+  kind: why
+  turns:
+    - message: "Why do late deliveries receive worse reviews than on-time deliveries?"
+  expected: answer
+  golden_sql: |
+    SELECT CASE WHEN is_late THEN 'late' ELSE 'on_time' END AS cohort,
+           count(*) AS reviewed_orders,
+           round(avg(review_score), 2) AS avg_review_score,
+           round(100.0 * avg(CASE WHEN review_score IN (1, 2) THEN 1.0 ELSE 0.0 END), 2) AS bad_review_pct
+    FROM clean.orders
+    WHERE status = 'delivered'
+      AND is_late IS NOT NULL
+      AND review_score IS NOT NULL
+    GROUP BY 1
+    ORDER BY 1;
+  meaning: "About 54% of late deliveries versus 9% of on-time deliveries received 1- or 2-star reviews (average score 2.57 against 4.29); this difference alone does not establish the reason."
+  quote_population: |
+    SELECT order_id,
+           CASE WHEN is_late THEN 'late' ELSE 'on_time' END AS cohort
+    FROM clean.orders
+    WHERE status = 'delivered'
+      AND is_late IS NOT NULL
+      AND review_score IS NOT NULL
+  approved_by_rienk: true
+- id: rj_sp_lateness
+  kind: why
+  turns:
+    - message: "Why is the late-delivery rate higher for buyers in RJ than for buyers in SP?"
+  expected: answer
+  golden_sql: |
+    SELECT CASE WHEN customer_state = 'RJ' THEN 'rj' ELSE 'sp' END AS cohort,
+           count(*) AS delivered_orders,
+           count(*) FILTER (WHERE is_late) AS late_orders,
+           round(100.0 * avg(CASE WHEN is_late THEN 1.0 ELSE 0.0 END), 2) AS late_share_pct
+    FROM clean.orders
+    WHERE status = 'delivered'
+      AND is_late IS NOT NULL
+      AND customer_state IN ('RJ', 'SP')
+    GROUP BY 1
+    ORDER BY 1;
+  meaning: "Approximately 14% of delivered orders to RJ versus 6% to SP missed the promised date; the figures show a regional gap, not its cause."
+  quote_population: |
+    SELECT order_id,
+           CASE WHEN customer_state = 'RJ' THEN 'rj' ELSE 'sp' END AS cohort
+    FROM clean.orders
+    WHERE status = 'delivered'
+      AND is_late IS NOT NULL
+      AND customer_state IN ('RJ', 'SP')
+  approved_by_rienk: true

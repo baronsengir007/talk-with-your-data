@@ -1,0 +1,14 @@
+.env
+.git
+logs/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+*.duckdb
+data/*.csv
+.venv/
+evals/screens/
+.models/
+_old-build/
+__pycache__/
+.pytest_cache/

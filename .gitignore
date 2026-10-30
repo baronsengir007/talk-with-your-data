@@ -1,0 +1,15 @@
+.env
+data/*.csv
+*.duckdb
+logs/
+evals/screens/
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+frontend/dist/
+.models/
+
+_old-build/
+AI_Engineering_Assignment_1_2_4.docx
+build/

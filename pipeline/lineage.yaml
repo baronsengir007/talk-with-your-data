@@ -1,0 +1,137 @@
+# Lineage of every raw column: where it went in the clean layer (`to`), or why it was left out (`dropped`).
+# The build checks that every column of every raw table has an entry and that every target exists (ADR 0003).
+
+raw.orders:
+  order_id:
+    to: [clean.orders.order_id]
+  customer_id:
+    dropped: a new id per order; it only serves the join to raw.customers. The person is clean.orders.customer_unique_id; the buyer location of that order is taken through this id into clean.orders.customer_zip_prefix / customer_city / customer_state.
+  order_status:
+    to: [clean.orders.status]
+  order_purchase_timestamp:
+    to: [clean.orders.purchase_ts, clean.orders.delivery_days, clean.customers.first_order_ts, clean.customers.last_order_ts]
+    note: cast to TIMESTAMP; delivery_days = calendar days from purchase to delivery.
+  order_approved_at:
+    to: [clean.orders.approved_ts]
+  order_delivered_carrier_date:
+    to: [clean.orders.carrier_ts]
+  order_delivered_customer_date:
+    to: [clean.orders.delivered_ts, clean.orders.delivery_days, clean.orders.days_vs_promise, clean.orders.is_late]
+    note: delivery_days, days_vs_promise and is_late are only set for delivered orders with a delivery date (2.97% of delivered rows have none).
+  order_estimated_delivery_date:
+    to: [clean.orders.estimated_ts, clean.orders.days_vs_promise, clean.orders.is_late]
+    note: days_vs_promise = calendar days from the promised date to delivery (positive = late); is_late = delivered after the promised moment (the promised date at 00:00), so a delivery on the promised day counts as late.
+
+raw.customers:
+  customer_id:
+    dropped: join key to raw.orders only (one per order).
+  customer_unique_id:
+    to: [clean.orders.customer_unique_id, clean.customers.customer_unique_id]
+    note: the person; 96,096 people behind 99,441 orders.
+  customer_zip_code_prefix:
+    to: [clean.orders.customer_zip_prefix, clean.orders.distance_km, clean.customers.customer_zip_prefix]
+    note: on clean.orders it is the buyer location of that order; on clean.customers it is the location of the person's latest order (39 people ordered from different states).
+  customer_city:
+    to: [clean.orders.customer_city, clean.customers.customer_city]
+    note: on clean.customers the city of the person's latest order.
+  customer_state:
+    to: [clean.orders.customer_state, clean.customers.customer_state]
+    note: on clean.customers the state of the person's latest order.
+
+raw.order_items:
+  order_id:
+    to: [clean.order_items.order_id, clean.orders.n_items, clean.orders.n_sellers, clean.orders.items_value, clean.orders.freight_value]
+  order_item_id:
+    to: [clean.order_items.order_item_id]
+  product_id:
+    to: [clean.order_items.product_id, clean.order_items.category, clean.order_items.category_english]
+  seller_id:
+    to: [clean.order_items.seller_id, clean.orders.n_sellers, clean.orders.distance_km]
+  shipping_limit_date:
+    to: [clean.order_items.shipping_limit_ts]
+  price:
+    to: [clean.order_items.price, clean.orders.items_value]
+  freight_value:
+    to: [clean.order_items.freight_value, clean.orders.freight_value]
+
+raw.order_payments:
+  order_id:
+    to: [clean.payments.order_id, clean.orders.order_payment_value, clean.orders.n_payment_types]
+  payment_sequential:
+    to: [clean.payments.payment_sequential]
+  payment_type:
+    to: [clean.payments.payment_type, clean.orders.n_payment_types]
+    note: never a column on clean.orders; 2,246 orders mix payment types.
+  payment_installments:
+    to: [clean.payments.installments]
+  payment_value:
+    to: [clean.payments.payment_value, clean.orders.order_payment_value]
+
+raw.order_reviews:
+  review_id:
+    to: [clean.reviews.review_id]
+    note: only the latest review per order is kept (551 older rows of 547 orders dropped, counted in the reconciliation).
+  order_id:
+    to: [clean.reviews.order_id]
+  review_score:
+    to: [clean.reviews.score, clean.orders.review_score]
+  review_comment_title:
+    to: [clean.reviews.title]
+  review_comment_message:
+    to: [clean.reviews.text, clean.reviews.embedding]
+    note: empty strings become NULL; the embedding is NULL when there is no text.
+  review_creation_date:
+    to: [clean.reviews.created_ts]
+  review_answer_timestamp:
+    to: [clean.reviews.answered_ts]
+
+raw.products:
+  product_id:
+    to: [clean.order_items.product_id]
+  product_category_name:
+    to: [clean.order_items.category, clean.order_items.category_english]
+    note: category_english falls back to the Portuguese name for the 2 categories without a translation.
+  product_name_lenght:
+    dropped: a length of the listing title; no question in the brief needs it.
+  product_description_lenght:
+    dropped: a length of the listing text; no question in the brief needs it.
+  product_photos_qty:
+    dropped: listing detail; no question in the brief needs it.
+  product_weight_g:
+    dropped: product size; no question in the brief needs it.
+  product_length_cm:
+    dropped: product size; no question in the brief needs it.
+  product_height_cm:
+    dropped: product size; no question in the brief needs it.
+  product_width_cm:
+    dropped: product size; no question in the brief needs it.
+
+raw.product_category_name_translation:
+  product_category_name:
+    to: [clean.order_items.category_english]
+  product_category_name_english:
+    to: [clean.order_items.category_english]
+
+raw.sellers:
+  seller_id:
+    to: [clean.sellers.seller_id]
+  seller_zip_code_prefix:
+    to: [clean.sellers.seller_zip_prefix, clean.orders.distance_km]
+  seller_city:
+    to: [clean.sellers.seller_city]
+  seller_state:
+    to: [clean.sellers.seller_state]
+
+raw.geolocation:
+  geolocation_zip_code_prefix:
+    to: [clean.orders.distance_km]
+    note: about 1M rows for 19,015 prefixes; lat/lng are averaged per prefix.
+  geolocation_lat:
+    to: [clean.orders.distance_km]
+    note: distance_km is the haversine distance between the buyer's prefix and the seller's prefix, averaged over the order's sellers; NULL when a prefix has no geolocation row.
+  geolocation_lng:
+    to: [clean.orders.distance_km]
+  geolocation_city:
+    dropped: spelling varies per row; city comes from raw.customers and raw.sellers.
+  geolocation_state:
+    dropped: state comes from raw.customers and raw.sellers.

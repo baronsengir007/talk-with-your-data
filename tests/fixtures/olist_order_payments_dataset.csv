@@ -1,0 +1,4 @@
+"order_id","payment_sequential","payment_type","payment_installments","payment_value"
+o1,1,credit_card,1,72.19
+o1,2,voucher,1,10.00
+o1,3,voucher,1,5.00

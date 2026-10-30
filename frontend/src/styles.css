@@ -1,0 +1,156 @@
+/* Tokens. One accent (deep green) for actions and the chart; the rest stays ink on paper. */
+:root {
+  --paper: #f4f4f1;
+  --card: #ffffff;
+  --ink: #1b1d1f;
+  --muted: #5f6368;
+  --line: #d8dad5;
+  --line-soft: #e8e9e5;
+  --accent: #0f6e56;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3f1ec;
+  --danger: #a4232b;
+  --danger-soft: #fbe9ea;
+  --amber-soft: #fbeccb;
+  --amber-ink: #6b4a00;
+  --slate-soft: #e4e9f0;
+  --slate-ink: #2f3e52;
+  --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", "Cascadia Code", ui-monospace, Consolas, monospace;
+  --radius: 6px;
+  --measure: 46rem;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.5; }
+body { margin: 0; }
+h1, h2, h3, h4, p { margin: 0; }
+h1 { text-wrap: balance; }
+h2, h3, h4 { text-wrap: pretty; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.page { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* Top bar */
+.top {
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: var(--measure); width: 100%; margin: 0 auto; padding: 1rem 1rem 0.5rem;
+}
+.brand { font-weight: 600; letter-spacing: -0.01em; }
+.ghost {
+  background: transparent; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 0.35rem 0.75rem; font-size: 0.9rem; color: var(--muted);
+}
+.ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+.banner {
+  max-width: var(--measure); width: 100%; margin: 0.5rem auto 0; padding: 0.6rem 1rem;
+  background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius);
+}
+
+/* Thread */
+.thread { flex: 1; max-width: var(--measure); width: 100%; margin: 0 auto; padding: 1rem 1rem 0; }
+.thread-end { height: 7rem; } /* keeps the last card above the fixed composer after scrollIntoView */
+
+.welcome { padding: 4rem 0 2rem; }
+.welcome h1 { font-size: 2rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
+.welcome p { margin: 1rem 0 1.5rem; color: var(--muted); max-width: 38rem; text-wrap: pretty; }
+.welcome-points { margin: 1rem 0 1.5rem; padding-left: 1.2rem; color: var(--muted); max-width: 38rem; display: grid; gap: 0.3rem; }
+
+.turn { padding: 1.25rem 0; border-top: 1px solid var(--line-soft); }
+.turn:first-child { border-top: 0; }
+.message { font-weight: 600; font-size: 1.05rem; margin-bottom: 0.5rem; }
+
+/* Live steps */
+.steps { list-style: none; margin: 0.25rem 0 0.75rem; padding: 0; font-size: 0.9rem; color: var(--muted); }
+.step { display: flex; gap: 0.5rem; padding: 0.15rem 0 0.15rem 1rem; position: relative; }
+.step::before { content: ""; position: absolute; left: 0; top: 0.7rem; width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.step.current::before { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+.steps-waiting { font-size: 0.9rem; color: var(--muted); margin: 0.25rem 0 0.75rem; }
+.steps-done { margin: 0.25rem 0 0.75rem; font-size: 0.85rem; color: var(--muted); }
+.steps-done summary { cursor: pointer; }
+.steps-done .steps { margin-top: 0.25rem; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .step.current::before { animation: none; } }
+
+/* The answer card */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.25rem 1.25rem 1rem; }
+.card > * + * { margin-top: 1rem; }
+.headline { font-size: 1.2rem; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+.explanation { white-space: pre-wrap; text-wrap: pretty; }
+.route-refuse, .route-missing_data, .route-not_understood, .route-clarify { background: var(--paper); }
+.route-withheld { border-color: var(--amber-ink); }
+.route-withheld .explanation { color: var(--amber-ink); }
+.route-error { border-color: var(--danger); }
+.route-error .headline { color: var(--danger); }
+
+/* Chart, table */
+.chart { margin: 0; }
+.chart figcaption { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+.table-wrap { overflow-x: auto; }
+.rows { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.rows th, .rows td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+.rows th { font-weight: 500; color: var(--muted); }
+.rows td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.table-more { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+
+/* Quotes */
+.quotes h3 { font-size: 0.95rem; font-weight: 600; }
+.cohort { margin-top: 0.5rem; }
+.cohort h4 { font-size: 0.85rem; font-weight: 500; color: var(--muted); margin-bottom: 0.25rem; }
+blockquote { margin: 0.5rem 0 0; padding: 0.5rem 0 0.5rem 0.9rem; border-left: 3px solid var(--line); }
+blockquote p { font-style: italic; text-wrap: pretty; }
+blockquote footer { font-size: 0.75rem; color: var(--muted); font-family: var(--mono); margin-top: 0.25rem; }
+
+/* The receipt: SQL & assumptions, or the judgments behind a stop */
+.receipt { border-top: 1px solid var(--line-soft); padding-top: 0.75rem; font-size: 0.9rem; }
+.receipt summary { cursor: pointer; font-weight: 500; color: var(--muted); }
+.receipt[open] summary { color: var(--ink); margin-bottom: 0.5rem; }
+.receipt-block + .receipt-block { margin-top: 0.75rem; }
+.receipt h4 { font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-bottom: 0.25rem; }
+.assumptions { margin: 0; padding-left: 1.2rem; }
+.sql { margin: 0; padding: 0.75rem 0.9rem; background: #1f2326; color: #e8e9e5; border-radius: var(--radius); font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; overflow-x: auto; white-space: pre; }
+.no-query { color: var(--muted); }
+.judgments { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+.judgments li { display: grid; grid-template-columns: minmax(10rem, 1fr) 8rem 2.5rem; gap: 0.6rem; align-items: center; }
+.judgment-label { color: var(--ink); }
+.meter { height: 6px; background: var(--line-soft); border-radius: 3px; overflow: hidden; }
+.meter-fill { display: block; height: 100%; background: var(--accent); }
+.judgment-value { font-family: var(--mono); font-size: 0.8rem; text-align: right; }
+.topics { margin-top: 0.5rem; color: var(--muted); }
+.decision-row { margin-top: 0.5rem; }
+.decision-row code { font-family: var(--mono); font-size: 0.8rem; background: var(--paper); padding: 0.1rem 0.4rem; border-radius: 3px; }
+.trace { margin-top: 0.75rem; font-size: 0.8rem; color: var(--muted); }
+
+/* Chips: follow-ups, topic buttons, examples */
+.followups-block h3 { font-size: 0.85rem; font-weight: 500; color: var(--muted); margin-bottom: 0.5rem; }
+.followups { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chip { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 0.4rem 0.9rem; font-size: 0.9rem; text-align: left; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.followups-topic .chip { border-color: var(--accent); color: var(--accent); text-transform: capitalize; }
+
+/* Composer: always open */
+.composer {
+  position: fixed; left: 0; right: 0; bottom: 0; padding: 0.75rem 1rem 1rem;
+  background: linear-gradient(to top, var(--paper) 70%, transparent);
+}
+.composer-row { position: relative; max-width: var(--measure); margin: 0 auto; }
+.composer input {
+  width: 100%; display: block;
+  padding: 0.85rem 5.5rem 0.85rem 1rem; font: inherit; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(27, 29, 31, 0.06);
+}
+.composer .primary {
+  position: absolute; right: 0.4rem; top: 50%; transform: translateY(-50%);
+  background: var(--accent); color: var(--accent-ink); border: 0; border-radius: var(--radius); padding: 0.45rem 0.9rem;
+}
+.composer .primary:disabled { opacity: 0.45; cursor: default; }
+.queue-note { max-width: var(--measure); margin: 0.35rem auto 0; font-size: 0.8rem; color: var(--muted); }
+
+@media (max-width: 600px) {
+  .welcome { padding-top: 2rem; }
+  .welcome h1 { font-size: 1.5rem; }
+  .judgments li { grid-template-columns: 1fr 5rem 2.5rem; }
+}
